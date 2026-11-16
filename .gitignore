@@ -18,6 +18,8 @@ id_rsa*
 id_ed25519*
 id_ecdsa*
 *.pem
+# ...except the database server's PUBLIC CA certificate (no secret inside)
+!certs/ca.pem
 *.key
 *.p12
 *.pfx
