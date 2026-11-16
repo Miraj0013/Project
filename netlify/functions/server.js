@@ -2,6 +2,16 @@
 // Netlify entry point. Netlify has no long-running Node server, so the whole Express app
 // runs inside this one serverless function; netlify.toml routes every page request here.
 // Static files (CSS, JS, favicon) are served directly by Netlify's CDN from /public.
+
+// Safe defaults for a public site, applied BEFORE the config is loaded: if environment
+// variables are missing, the app must not fall back to development mode (which would
+// expose the dev mailbox with everyone's login codes) or to non-Secure cookies.
+process.env.NODE_ENV = process.env.NODE_ENV || 'production';
+process.env.COOKIE_SECURE = process.env.COOKIE_SECURE || 'true';
+process.env.DEV_MAILBOX = process.env.DEV_MAILBOX || 'false';
+process.env.DB_CONNECT_RETRIES = process.env.DB_CONNECT_RETRIES || '3'; // stay inside the function time limit
+process.env.DB_POOL_SIZE = process.env.DB_POOL_SIZE || '3';
+
 const serverless = require('serverless-http');
 const app = require('../../src/app');
 const { initDatabase } = require('../../database/init');
