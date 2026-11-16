@@ -7,7 +7,7 @@ const { pool, query, one } = require('../src/config/db');
 const { passwordProblems } = require('../src/utils/validate');
 
 /** Wait for MySQL (useful in Docker where the DB container starts slower). */
-async function waitForDb(retries = 30) {
+async function waitForDb(retries = config.db.connectRetries) {
   for (let i = 1; i <= retries; i++) {
     try {
       await query('SELECT 1');

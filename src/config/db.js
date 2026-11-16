@@ -4,10 +4,15 @@ const config = require('./index');
 
 // Connection pool. Every query in the app goes through query()/the pool with
 // `?` placeholders, so user input is never concatenated into SQL (SQL injection defence).
+const { poolSize, connectRetries, ssl, ...connection } = config.db;
 const pool = mysql.createPool({
-  ...config.db,
+  ...connection,
+  ...(ssl ? { ssl } : {}),
   waitForConnections: true,
-  connectionLimit: 10,
+  connectionLimit: poolSize,
+  maxIdle: Math.min(poolSize, 3),
+  idleTimeout: 30000,     // close idle connections (serverless containers freeze between requests)
+  enableKeepAlive: true,
   charset: 'utf8mb4',
   timezone: 'Z',
   multipleStatements: false, // stacked queries ("; DROP TABLE ...") are impossible

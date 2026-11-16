@@ -101,7 +101,11 @@ A screenshot of that output is good evidence for the report.
 ## Project structure
 
 ```
-server.js                  Express app: middleware order, sessions, routes, error handling
+server.js                  Starts the app as a normal server (npm start, Docker)
+src/app.js                 Express app: middleware order, sessions, routes, error handling
+netlify/functions/server.js Runs the same app as a Netlify Function (serverless)
+netlify.toml               Netlify config: CDN for /public, everything else -> the function
+netlify.env.example        Template of the Netlify environment variables
 database/schema.sql        MySQL tables (users, otp_codes, password_resets, known_devices, audit_logs, products, orders)
 database/init.js           Applies the schema and seeds the admin + demo products (npm run db:init)
 src/config/index.js        Reads .env (all security settings can be changed here)
@@ -124,7 +128,45 @@ The repo can be deployed as-is:
 
 - **Docker / any VPS:** `docker compose up -d --build`. Put Nginx or Caddy with HTTPS in front, then set `COOKIE_SECURE=true`, `TRUST_PROXY=1`, `APP_URL=https://your-domain` and `DEV_MAILBOX=false`.
 - **Render / Railway / Fly.io:** create a MySQL database, set the variables from `.env.example` in the dashboard and use `npm start` as the start command.
+- **Netlify:** see the step-by-step guide below.
 
 Before going public, always change `SESSION_SECRET`, `ENCRYPTION_KEY`, `ADMIN_PASSWORD` and the database passwords.
 # Project
 # Project
+
+---
+
+## Deploy to Netlify
+
+Netlify has no always-on Node server and no database. The Express app therefore runs as a **Netlify Function** (`netlify/functions/server.js`, wrapped with `serverless-http`), the CSS/JS in `public/` is served by Netlify's CDN, and MySQL is hosted by a separate free provider.
+
+**You need three free accounts:** Netlify, a cloud MySQL (the steps use **Aiven**), and a Gmail account for sending login codes.
+
+### 1. Create the MySQL database (Aiven)
+1. Sign up at aiven.io and create a **MySQL** service on the **Free plan**.
+2. When it is running, open it and note the **Host, Port, User, Password** and database name (`defaultdb`).
+3. Download the **CA certificate** and save it as `certs/ca.pem` in this project. Then commit and push it. It is a public certificate, not a secret.
+
+### 2. Create a Gmail App Password (for the 2FA emails)
+1. On the Google account: **Security → 2-Step Verification** must be ON.
+2. **Security → App passwords** → create one named "ShostaBazar". Copy the 16-character password.
+
+### 3. Create the Netlify site
+1. Sign in to netlify.com → **Add new site → Import an existing project → GitHub** and pick this repository.
+2. The build settings come from `netlify.toml`, so leave them as they are. Click **Deploy**.
+3. Note the site address, e.g. `https://shostabazar-xyz.netlify.app`.
+
+### 4. Add the environment variables
+1. Fill in `netlify.env`. It is generated locally with fresh secrets and is **not** committed; if you don't have it, copy `netlify.env.example`. Fill in the Aiven values, the Gmail address + App Password, `ADMIN_EMAIL` and the real `APP_URL`.
+2. Netlify → **Site configuration → Environment variables → Import from a .env file** → paste the file's contents.
+3. **Deploys → Trigger deploy → Deploy site.**
+
+The first visit creates the tables and the admin account. Sign in as `admin` with the `ADMIN_PASSWORD` from your env file; the login code arrives in the `ADMIN_EMAIL` inbox.
+
+### Netlify notes and limits
+- `DEV_MAILBOX` must stay `false` on Netlify, otherwise anyone could read login codes.
+- The first request after a quiet period is slower (a "cold start", plus connecting to the database).
+- Rate limits are kept in memory per function instance, so they are weaker than on a normal server. The 3-attempt **account lockout is stored in MySQL**, so it still works fully.
+- Real visitor IPs come from Netlify's own `x-nf-client-connection-ip` header, so `X-Forwarded-For` cannot be spoofed.
+- AWS Lambda allows only 4 KB of environment variables in total, so keep the list as in `netlify.env.example`.
+

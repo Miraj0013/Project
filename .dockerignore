@@ -5,3 +5,5 @@ node_modules
 !.env.example
 *.log
 docs
+netlify.env
+.netlify

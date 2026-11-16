@@ -5,6 +5,24 @@ const crypto = require('crypto');
 const env = process.env;
 const isProd = env.NODE_ENV === 'production';
 
+/**
+ * TLS settings for the database connection. The server certificate is always verified.
+ * Providers with their own CA (e.g. Aiven) need it via DB_SSL_CA (PEM text, "\n" allowed)
+ * or DB_SSL_CA_FILE (path relative to the project root); otherwise system CAs are used.
+ */
+function readDbCa() {
+  const fs = require('fs');
+  const path = require('path');
+  let ca = env.DB_SSL_CA ? env.DB_SSL_CA.replace(/\\n/g, '\n') : null;
+  if (!ca && env.DB_SSL_CA_FILE) {
+    const file = [path.resolve(__dirname, '../..', env.DB_SSL_CA_FILE), path.resolve(process.cwd(), env.DB_SSL_CA_FILE)]
+      .find((f) => fs.existsSync(f));
+    if (file) ca = fs.readFileSync(file, 'utf8');
+    else console.warn(`[config] DB_SSL_CA_FILE ${env.DB_SSL_CA_FILE} not found - using system CAs.`);
+  }
+  return { minVersion: 'TLSv1.2', rejectUnauthorized: true, ...(ca ? { ca } : {}) };
+}
+
 function int(name, def) {
   const n = parseInt(env[name], 10);
   return Number.isFinite(n) ? n : def;
@@ -43,6 +61,10 @@ module.exports = {
     user: env.DB_USER || 'shostabazar',
     password: env.DB_PASSWORD || '',
     database: env.DB_NAME || 'shostabazar',
+    poolSize: int('DB_POOL_SIZE', 10),
+    connectRetries: int('DB_CONNECT_RETRIES', 30),
+    // TLS to a cloud MySQL (Aiven, TiDB Cloud, PlanetScale-compatible...).
+    ssl: env.DB_SSL === 'true' ? readDbCa() : null,
   },
 
   security: {

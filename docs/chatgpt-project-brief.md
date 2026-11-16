@@ -470,3 +470,26 @@ Product categories (fixed whitelist): Electronics, Fashion, Home, Books, Sports,
 ---
 
 **What I will ask you next:** help me write the project report (with code excerpts and an explanation of each security measure), a slide outline for the PPTX, likely viva questions with good answers, or the plan for the remaining items in section 10. Please wait for my specific request.
+
+---
+
+## 12. Update: Netlify deployment support (added later)
+
+- The Express app was moved from `server.js` into **`src/app.js`**. `server.js` now only starts it for `npm start` / Docker.
+- **`netlify/functions/server.js`**: runs the same app as a Netlify Function using `serverless-http`.
+  - Creates the tables and seeds the admin once per cold start.
+  - Takes the visitor IP from Netlify's `x-nf-client-connection-ip` header (`X-Forwarded-For` spoofing is ignored).
+  - Marks requests as HTTPS so `Secure` cookies work.
+  - Returns 503 if the database is unreachable.
+- **`netlify.toml`**:
+  - `public/` is served by the CDN; every other path is rewritten to the function.
+  - Uses the `zisi` bundler with `included_files` for the views, both `schema.sql` files and `certs/`.
+  - Node 20 and basic security headers for static files.
+- **Database:**
+  - TLS support: `DB_SSL`, `DB_SSL_CA` / `DB_SSL_CA_FILE` (certificate always verified).
+  - `DB_POOL_SIZE` and `DB_CONNECT_RETRIES`.
+  - Idle connections are closed after 30 s.
+- **EJS** is now registered explicitly (`app.engine('ejs', …)`) because Netlify's bundler missed Express's dynamic `require('ejs')`.
+- **`netlify.env.example`** (committed template) and a locally generated **`netlify.env`** with real secrets (git-ignored). `certs/README.md` explains the Aiven CA certificate.
+- **Tests:** the real Netlify bundle (built with Netlify's `zip-it-and-ship-it`) was run on its own through a local Lambda emulator in production mode. All **65/65** security checks passed, with `Secure; HttpOnly; SameSite=Strict` cookies.
+- **Not done:** the actual Netlify site, the Aiven database and the Gmail App Password have to be created by the student. Rate limits are per function instance on Netlify (the lockout is in MySQL, so it still works).
