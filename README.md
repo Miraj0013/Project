@@ -127,3 +127,4 @@ The repo can be deployed as-is:
 
 Before going public, always change `SESSION_SECRET`, `ENCRYPTION_KEY`, `ADMIN_PASSWORD` and the database passwords.
 # Project
+# Project
