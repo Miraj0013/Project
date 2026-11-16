@@ -126,3 +126,4 @@ The repo can be deployed as-is:
 - **Render / Railway / Fly.io:** create a MySQL database, set the variables from `.env.example` in the dashboard and use `npm start` as the start command.
 
 Before going public, always change `SESSION_SECRET`, `ENCRYPTION_KEY`, `ADMIN_PASSWORD` and the database passwords.
+# Project
