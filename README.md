@@ -70,6 +70,17 @@ Then open http://localhost:3000. The admin login is `admin` / `Ch@ngeMe-Adm1n!` 
 
 If `SMTP_HOST` is empty, nothing is actually emailed. Every email and SMS (OTP codes, reset links, new-device and lockout alerts) appears at **http://localhost:3000/dev/mailbox**, which is handy for the class demo. To send real email, fill in the `SMTP_*` settings (for example Gmail with an App Password). For real SMS, fill in the `TWILIO_*` settings. **Set `DEV_MAILBOX=false` on any public deployment.**
 
+### Automated security test
+
+`tests/security-e2e.js` drives the running app over real HTTP and makes **65 checks**: registration and password policy, OTP 2FA, new-device alerts, lockout after 3 failures, password reset, SQL injection, XSS, CSRF, access control, buying logic, the admin panel, session revocation and TOTP replay protection. Run it against a **fresh, empty** database:
+
+```bash
+npm start        # terminal 1
+npm test         # terminal 2  ->  RESULT: 65 passed, 0 failed
+```
+
+A screenshot of that output is good evidence for the report.
+
 ---
 
 ## Demo script for the presentation
@@ -102,6 +113,7 @@ src/services/audit.js      Security audit log
 src/utils/validate.js      Input validation and password policy
 src/utils/crypto.js        Secure random values, SHA-256, constant-time compare, AES-256-GCM
 src/routes/                auth, account (2FA/devices/password), market, admin, dev mailbox
+tests/security-e2e.js      End-to-end security test (npm test)
 views/                     EJS templates (auto-escaped)
 public/                    CSS + client JS (no inline scripts, as CSP requires)
 ```

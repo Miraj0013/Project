@@ -11,7 +11,7 @@
 <body<% if (currentUser) { %> data-idle-timeout="<%= idleTimeoutSeconds %>"<% } %>>
 <header class="topbar">
   <div class="container topbar-inner">
-    <a class="brand" href="/"><span class="brand-mark">৳</span> Shosta<span>Bazar</span></a>
+    <a class="brand" href="/"><span class="brand-mark">৳</span><span class="brand-name">Shosta<span>Bazar</span></span></a>
     <nav class="nav">
       <% if (currentUser) { %>
         <a href="/dashboard" class="<%= path === '/dashboard' ? 'active' : '' %>">Marketplace</a>

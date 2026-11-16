@@ -25,7 +25,7 @@ code { background: #eef2f7; padding: .1rem .35rem; border-radius: 4px; }
 .topbar-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; flex-wrap: wrap; }
 .brand { font-weight: 800; font-size: 1.3rem; color: var(--text); display: flex; align-items: center; gap: 8px; }
 .brand:hover { text-decoration: none; }
-.brand span:last-child { color: var(--brand); }
+.brand-name span { color: var(--brand); }
 .brand-mark { background: var(--brand); color: #fff; width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; }
 .nav { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
 .nav > a { color: var(--text); padding: 8px 12px; border-radius: 8px; font-size: .95rem; }
