@@ -7,3 +7,6 @@ npm-debug.log*
 .DS_Store
 coverage/
 graphify-out/
+github_key
+*.pem
+*.key
